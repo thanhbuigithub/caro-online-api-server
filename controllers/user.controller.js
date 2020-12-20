@@ -1,5 +1,5 @@
 const User = require("../models/User.model");
-const passport = require('passport');
+const { validationResult } = require("express-validator");
 
 
 exports.readController = async (req, res) => {
@@ -75,4 +75,41 @@ exports.updateController = async (req, res) => {
             });
         });
     });
+};
+
+exports.changePasswordController = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
+    const id = req.user._id;
+    const user = await User.findOne({ _id: id });
+
+    const isPasswordValid = await user.authenticate(oldPassword);
+    if (!isPasswordValid) return res.status(400).send("Old password is wrong.");
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const firstError = errors.array().map((error) => error.msg)[0];
+        return res.status(422).send(firstError);
+    } else {
+        user.password = newPassword;
+    }
+
+    try {
+        const response = await user.save();
+        if (response) {
+            console.log('Success')
+            return res.status(200).send("Change password successfully");
+        }
+    } catch (error) {
+        return res.status(400).send(error);
+    }
+    // //Hash password
+    // const salt = await bcrypt.genSalt(10);
+    // const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // User.updateOne({ _id: id }, { $set: { password: hashedPassword } }, function (
+    //     err
+    // ) {
+    //     if (err) return res.status(400).send(err);
+    //     return res.status(200).send("Change password successfully");
+    // });
 };

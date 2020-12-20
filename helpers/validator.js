@@ -30,3 +30,11 @@ exports.validatorResetPassword = [
     check('newPassWord').matches(/^(?=.*[A-Z])/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự hoa'),
     check('newPassWord').matches(/^(?=.*[@$!%*#?&]).*$/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự đặc biệt')
 ];
+
+exports.validatorChangePassword = [
+    check('newPassword').notEmpty().isLength({ min: 8 }).withMessage('Mật khẩu chứa ít nhất 8 kí tự'),
+    check('newPassword').matches(/\d/).withMessage('Mật khẩu phải chứa ít nhất 1 số'),
+    check('newPassword').matches(/^(?=.*[a-z])/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự thường'),
+    check('newPassword').matches(/^(?=.*[A-Z])/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự hoa'),
+    check('newPassword').matches(/^(?=.*[@$!%*#?&]).*$/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự đặc biệt')
+];
