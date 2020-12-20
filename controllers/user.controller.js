@@ -1,34 +1,12 @@
-const User = require("../models/user.model");
+const User = require("../models/User.model");
+const passport = require('passport');
+
 
 exports.readController = async (req, res) => {
     const id = req.user.id || req.user._id;
     const user = await User.findOne({ _id: id });
     const sender = { id: id, name: user.name, email: user.email };
     return res.status(200).send(sender);
-    // const userId = req.user.id;
-    // const user = await User.findById({ _id: userId });
-    // if (user) {
-    //     const sender = {
-    //         id: user._id,
-    //         name: user.name,
-    //         email: user.email
-    //     };
-    //     return res.status(200).send(sender);
-    // } else {
-    //     return res.status(400).json({
-    //         error: 'User not found'
-    //     });
-    // }
-    // User.findById(userId).exec((err, user) => {
-    //     if (err || !user) {
-    //         return res.status(400).json({
-    //             error: 'User not found'
-    //         });
-    //     }
-    //     user.hashPassword = undefined;
-    //     user.salt = undefined;
-    //     res.json(user);
-    // });
 };
 
 exports.updateController = async (req, res) => {

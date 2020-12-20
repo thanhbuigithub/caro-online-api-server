@@ -20,35 +20,20 @@ const {
   validatorResetPassword,
 } = require("../helpers/validator");
 
-const verifyToken = require("../helpers/verifyToken");
-
 router.post("/register", validatorSignUp, registerController);
 router.post("/active", activeUserController);
 router.post("/login", validatorSignIn, loginController);
 router.post("/google_login", googleLoginController);
 router.post("/facebook_login", facebookLoginController);
-router.put(
+router.post(
   "/forgot_password",
-  verifyToken,
   validatorForgotPassword,
   forgotPasswordController
 );
 router.put(
   "/reset_password",
-  verifyToken,
   validatorResetPassword,
   resetPasswordController
-);
-
-router.get("/profile",
-  verifyToken,
-  readController
-);
-
-router.put(
-  "/update",
-  verifyToken,
-  updateController
 );
 
 module.exports = router;

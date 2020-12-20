@@ -9,17 +9,23 @@ const path = require("path");
 
 // CONFIG .env
 require("dotenv").config();
+const passport = require('./middlewares/passport');
 
 // Import Routers
 const authRouter = require("./routers/auth.router");
-const adminRouter = require("./routers/admin.router");
-
+const userRouter = require("./routers/user.router");
 // Connect to mongo DB
 connectDB();
+
+
+//Passport initialize
+app.use(passport.initialize());
 
 //Middleware
 app.use(bodyParser.json());
 app.use(cors());
+
+
 
 if (process.env.NODE_ENV === "development") {
   app.use(cors({ origin: process.env.CLIENT_URL }));
@@ -30,9 +36,11 @@ app.get("/", (req, res) => {
   res.send("Repo for Caro Online Web App");
 });
 
+
 // Route Middleware
+
 app.use("/api/user", authRouter);
-app.use("/api/admin", adminRouter);
+app.use('/api/user', passport.authenticate('jwt', { session: false }), userRouter);
 
 //Page not found
 app.use((req, res) => {

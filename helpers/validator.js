@@ -20,7 +20,7 @@ exports.validatorSignIn = [
 ]
 
 exports.validatorForgotPassword = [
-    check('email').notEmpty().isEmail().withMessage('Email phải hợp lệ !')
+    check('email').notEmpty().isEmail().withMessage('Email không hợp lệ !')
 ];
 
 exports.validatorResetPassword = [

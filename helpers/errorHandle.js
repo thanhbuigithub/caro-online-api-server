@@ -12,7 +12,7 @@ const uniqueMessages = error => {
         messages = fieldName.charAt(0).toUpperCase() + fieldName.slice(1) + ' đã tồn tại';
 
     } catch (err) {
-        messages = ' đã tồn tại';
+        messages = 'Account has been verify';
     }
     return messages;
 }

@@ -1,5 +1,4 @@
-const User = require("../models/user.model");
-const expressJwt = require("express-jwt");
+const User = require("../models/User.model");
 const fetch = require("node-fetch");
 const _ = require("lodash");
 const { OAuth2Client } = require("google-auth-library");
@@ -8,65 +7,62 @@ const jwt = require("jsonwebtoken");
 const { errorHandler } = require("../helpers/errorHandle");
 const sgMail = require("@sendgrid/mail");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT);
-const listUserOnline = require("../object/listUserOnline");
-
+const passport = require('passport');
 sgMail.setApiKey(process.env.API_KEY);
 
-exports.registerController = async (req, res) => {
-  const { username, email, password, name } = req.body;
 
+
+
+exports.registerController = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const firstError = errors.array().map((error) => error.msg)[0];
     return res.status(422).send(firstError);
   } else {
-    const isUserEmailExist = await User.findOne({ email: email });
-    if (isUserEmailExist) {
-      return res.status(400).send("The Email already exists");
-    }
-
-    const isUsernameExist = await User.findOne({ username: username });
-    if (isUsernameExist) {
-      return res.status(400).send("The Username already exists");
-    }
-
-    const token = jwt.sign(
-      {
-        username,
-        email,
-        name,
-        password,
-      },
-      process.env.JWT_USER_ACTIVE,
-      { expiresIn: "10m" }
-    );
-
-    const emailMessage = {
-      from: process.env.MAIL_FROM,
-      to: email,
-      subject: "Email kích hoạt tài khoản",
-      html: `<h1>Nhấn vào link bên dưới để kích hoạt tài khoản !!!</h1>
-            <p>${process.env.CLIENT_URL}/user/active/${token}</p>
-            <hr />`,
-    };
-
-    try {
-      const emailSent = await sgMail.send(emailMessage);
-      if (emailSent) {
-        return res.json({
-          message: `Email kích hoạt tài khoản đã được gửi tới ${email}`,
-        });
+    passport.authenticate('signup-local', {
+      session: false
+    }, (err, user, info) => {
+      if (err) {
+        return next(err)
+      };
+      if (!user) {
+        return res.status(400).send(info.message)
       }
-    } catch (error) {
-      return res.status(400).json({
-        success: false,
-        error: errorHandler(error),
-      });
-    }
-  }
+      else {
+        const payload = {
+          ...user
+        };
+        const token = jwt.sign(payload, process.env.JWT_USER_ACTIVE,
+          { expiresIn: "30m" });
+
+        const emailMessage = {
+          from: process.env.MAIL_FROM,
+          to: user.email,
+          subject: "Email kích hoạt tài khoản",
+          html: `<h1>Nhấn vào link bên dưới để kích hoạt tài khoản !!!</h1>
+                  <p>${process.env.CLIENT_URL}/user/active/${token}</p>
+                  <hr />`,
+        };
+        sgMail
+          .send(emailMessage)
+          .then((sent, error) => {
+            if (sent) {
+              return res.json({
+                message: `Email kích hoạt tài khoản đã được gửi tới ${user.email}`,
+              });
+            } else {
+              return res.status(400).json({
+                success: false,
+                error: errorHandler(error),
+              });
+            }
+          })
+      }
+    })(req, res, next);
+  };
 };
 
-exports.activeUserController = (req, res) => {
+exports.activeUserController = (req, res, next) => {
   const { token } = req.body;
   if (token) {
     jwt.verify(token, process.env.JWT_USER_ACTIVE, (err, decoded) => {
@@ -103,7 +99,7 @@ exports.forgotPasswordController = async (req, res) => {
   const { email } = req.body;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    const firstError = errors.array().map((error) => error.msg)[0];
+    const firstError = errors.errors.map((error) => error.msg)[0];
     return res.status(422).send(firstError);
   } else {
     const user = await User.findOne({ email: email });
@@ -122,7 +118,7 @@ exports.forgotPasswordController = async (req, res) => {
         to: email,
         subject: "Email Reset Mật Khẩu",
         html: `<h1>Nhấn vào link bên dưới để reset mật khẩu</h1>
-                <p>${process.env.CLIENT_URL}/user/password/reset/${token}</p>
+                <p>${process.env.CLIENT_URL}/reset_password/${token}</p>
                 <hr />`,
       };
       try {
@@ -159,17 +155,16 @@ exports.resetPasswordController = (req, res) => {
         process.env.JWT_RESET_PASSWORD,
         (err, decoded) => {
           if (err) {
-            return res.status(400).json({
-              error: "Reset link expired ! Try again",
-            });
+            return res.status(400).send("Reset link expired ! Try again");
           }
           User.findOne({
             resetPassWordLink,
           }).exec((err, user) => {
             if (err || !user) {
-              return res.status(400).json({
-                error: "Something is error ! Try again",
-              });
+              return res.status(400).send('Something is error ! Try again');
+              // return res.status(400).json({
+              //   error: "Something is error ! Try again",
+              // });
             }
             const passwordObject = {
               password: newPassWord,
@@ -178,9 +173,7 @@ exports.resetPasswordController = (req, res) => {
             user = _.extend(user, passwordObject);
             user.save((err, result) => {
               if (err) {
-                return res.status(400).json({
-                  message: "Error Reset Password",
-                });
+                return res.status(400).send('Error Reset Password');
               } else {
                 return res.json({
                   message: "Change password successfully",
@@ -194,39 +187,29 @@ exports.resetPasswordController = (req, res) => {
   }
 };
 
-exports.loginController = (req, res) => {
-  const { username, password } = req.body;
+exports.loginController = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const firstError = errors.array().map((error) => error.msg)[0];
     return res.status(422).send(firstError);
   } else {
-    User.findOne({
-      username,
-    }).exec((err, user) => {
-      if (err || !user) {
-        return res.status(400).send("Username is wrong");
+    passport.authenticate('signin-local', {
+      session: false
+    }, (err, user, info) => {
+      if (err) {
+        return res.status(400).send(err)
+      };
+      if (!user) {
+        return res.status(400).send(info.message)
       }
-      if (!user.authenticate(password)) {
-        return res.status(400).send("Password is wrong");
-      }
-
-      const token = jwt.sign(
-        {
-          _id: user._id,
-          username: user.username,
-        },
-        process.env.SECRET_KEY,
-        {
-          expiresIn: "30d", // Remember me
-        }
-      );
-
-      //listUserOnline.push(user.username);
-      //const { _id, username, name, email, isAdmin } = user;
-      return res.send(token);
-    });
-  }
+      const payload = {
+        _id: user._id,
+        username: user.username,
+      };
+      const token = jwt.sign(payload, process.env.SECRET_KEY);
+      res.send(token);
+    })(req, res, next);
+  };
 };
 
 exports.requireAdmin = async (req, res, next) => {
@@ -283,7 +266,7 @@ exports.googleLoginController = async (req, res) => {
         const token = jwt.sign({ id: savedUser._id, username: user.username }, process.env.SECRET_KEY, {
           expiresIn: "20d",
         });
-        //listUserOnline.push(newUser.username);
+
         return res.header("Authorization", token).send(token);
       } catch (error) {
         return res.status(400).send(errorHandler(error));
