@@ -4,7 +4,6 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const connectDB = require("./configs/database");
-const mongoose = require("mongoose");
 const path = require("path");
 
 // CONFIG .env
@@ -17,7 +16,6 @@ const userRouter = require("./routers/user.router");
 // Connect to mongo DB
 connectDB();
 
-
 //Passport initialize
 app.use(passport.initialize());
 
@@ -25,12 +23,11 @@ app.use(passport.initialize());
 app.use(bodyParser.json());
 app.use(cors());
 
-
-
 if (process.env.NODE_ENV === "development") {
   app.use(cors({ origin: process.env.CLIENT_URL }));
   app.use(morgan("dev"));
 }
+
 
 app.get("/", (req, res) => {
   res.send("Repo for Caro Online Web App");
@@ -41,6 +38,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/user", authRouter);
 app.use('/api/user', passport.authenticate('jwt', { session: false }), userRouter);
+
 
 //Page not found
 app.use((req, res) => {

@@ -20,9 +20,17 @@ const {
   validatorResetPassword,
 } = require("../helpers/validator");
 
+const passport = require('passport');
+
 router.post("/register", validatorSignUp, registerController);
 router.post("/active", activeUserController);
 router.post("/login", validatorSignIn, loginController);
+router.get('/login/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/auth/google/callback',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/login`
+  }), googleLoginController);
 router.post("/google_login", googleLoginController);
 router.post("/facebook_login", facebookLoginController);
 router.post(

@@ -229,52 +229,65 @@ exports.requireAdmin = async (req, res, next) => {
   }
 };
 
+// exports.googleLoginController = async (req, res) => {
+//   const { id_token } = req.body;
+//   const google_client_res = await client.verifyIdToken({
+//     idToken: id_token,
+//     audience: process.env.GOOGLE_CLIENT,
+//   });
+//   const { email_verified, name, email } = google_client_res.payload;
+
+//   if (email_verified) {
+//     const user = await User.findOne({ email: email });
+
+//     if (user) {
+//       const token = jwt.sign(
+//         {
+//           id: user._id,
+//           username: user.username,
+//         },
+//         process.env.SECRET_KEY,
+//         {
+//           expiresIn: "20d",
+//         }
+//       );
+//       //listUserOnline.push(user.username);
+//       return res.header("Authorization", token).send(token);
+//     } else {
+//       let password = email + process.env.SECRET_KEY;
+//       const newUser = new User({
+//         username: email,
+//         name: name,
+//         email: email,
+//         password: password,
+//       });
+//       try {
+//         const savedUser = await newUser.save();
+//         const token = jwt.sign({ id: savedUser._id, username: user.username }, process.env.SECRET_KEY, {
+//           expiresIn: "20d",
+//         });
+
+//         return res.header("Authorization", token).send(token);
+//       } catch (error) {
+//         return res.status(400).send(errorHandler(error));
+//       }
+//     }
+//   } else {
+//     return res.status(400).send("Google Login Error! Try again");
+//   }
+// };
+
 exports.googleLoginController = async (req, res) => {
-  const { id_token } = req.body;
-  const google_client_res = await client.verifyIdToken({
-    idToken: id_token,
-    audience: process.env.GOOGLE_CLIENT,
-  });
-  const { email_verified, name, email } = google_client_res.payload;
-
-  if (email_verified) {
-    const user = await User.findOne({ email: email });
-
-    if (user) {
-      const token = jwt.sign(
-        {
-          id: user._id,
-          username: user.username,
-        },
-        process.env.SECRET_KEY,
-        {
-          expiresIn: "20d",
-        }
-      );
-      //listUserOnline.push(user.username);
-      return res.header("Authorization", token).send(token);
-    } else {
-      let password = email + process.env.SECRET_KEY;
-      const newUser = new User({
-        username: email,
-        name: name,
-        email: email,
-        password: password,
-      });
-      try {
-        const savedUser = await newUser.save();
-        const token = jwt.sign({ id: savedUser._id, username: user.username }, process.env.SECRET_KEY, {
-          expiresIn: "20d",
-        });
-
-        return res.header("Authorization", token).send(token);
-      } catch (error) {
-        return res.status(400).send(errorHandler(error));
-      }
-    }
-  } else {
-    return res.status(400).send("Google Login Error! Try again");
-  }
+  const user = req.user;
+  const token = jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+    },
+    process.env.SECRET_KEY
+  );
+  res.redirect(`${process.env.CLIENT_URL}/login/?token=${token}`)
+  // res.header("Authorization", token).send(token);
 };
 
 exports.facebookLoginController = async (req, res) => {

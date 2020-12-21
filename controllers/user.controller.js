@@ -101,15 +101,5 @@ exports.changePasswordController = async (req, res) => {
         }
     } catch (error) {
         return res.status(400).send(error);
-    }
-    // //Hash password
-    // const salt = await bcrypt.genSalt(10);
-    // const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-    // User.updateOne({ _id: id }, { $set: { password: hashedPassword } }, function (
-    //     err
-    // ) {
-    //     if (err) return res.status(400).send(err);
-    //     return res.status(200).send("Change password successfully");
-    // });
+    } s
 };
