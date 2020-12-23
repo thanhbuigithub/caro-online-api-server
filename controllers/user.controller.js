@@ -5,7 +5,7 @@ const { validationResult } = require("express-validator");
 exports.readController = async (req, res) => {
     const id = req.user.id || req.user._id;
     const user = await User.findOne({ _id: id });
-    const sender = { id: id, name: user.name, email: user.email };
+    const sender = { id: id, name: user.name, email: user.email, username: user.username };
     return res.status(200).send(sender);
 };
 
