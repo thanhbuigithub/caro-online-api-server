@@ -6,7 +6,7 @@ const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const { errorHandler } = require("../helpers/errorHandle");
 const sgMail = require("@sendgrid/mail");
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const passport = require('passport');
 sgMail.setApiKey(process.env.API_KEY);
 
@@ -231,11 +231,11 @@ exports.requireAdmin = async (req, res, next) => {
 
 // exports.googleLoginController = async (req, res) => {
 //   const { id_token } = req.body;
-//   const google_client_res = await client.verifyIdToken({
+//   const GOOGLE_CLIENT_ID_res = await client.verifyIdToken({
 //     idToken: id_token,
-//     audience: process.env.GOOGLE_CLIENT,
+//     audience: process.env.GOOGLE_CLIENT_ID,
 //   });
-//   const { email_verified, name, email } = google_client_res.payload;
+//   const { email_verified, name, email } = GOOGLE_CLIENT_ID_res.payload;
 
 //   if (email_verified) {
 //     const user = await User.findOne({ email: email });

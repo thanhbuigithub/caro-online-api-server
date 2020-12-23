@@ -82,7 +82,7 @@ exports.changePasswordController = async (req, res) => {
     const id = req.user._id;
     const user = await User.findOne({ _id: id });
 
-    const isPasswordValid = await user.authenticate(oldPassword);
+    const isPasswordValid = user.authenticate(oldPassword);
     if (!isPasswordValid) return res.status(400).send("Old password is wrong.");
 
     const errors = validationResult(req);
