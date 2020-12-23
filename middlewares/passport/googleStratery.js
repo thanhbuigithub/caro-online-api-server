@@ -13,7 +13,7 @@ module.exports = new GoogleStrategy({
             return done(null, user);
         }
         const newUser = new User({
-            username: profile.emails[0].value,
+            username: profile.displayName,
             name: profile.displayName,
             email: profile.emails[0].value,
             password: token,

@@ -290,47 +290,60 @@ exports.googleLoginController = async (req, res) => {
   // res.header("Authorization", token).send(token);
 };
 
+// exports.facebookLoginController = async (req, res) => {
+//   const { user_id, access_token } = req.body;
+//   const url = `https://graph.facebook.com/v2.11/${user_id}/?fields=id,name,email&access_token=${access_token}`;
+//   return fetch(url, {
+//     method: "GET",
+//   })
+//     .then((response) => response.json())
+//     .then(async (response) => {
+//       const { email, name } = response;
+//       const user = await User.findOne({ email: email });
+//       if (user) {
+//         const token = jwt.sign({ id: user._id, username: user.username }, process.env.SECRET_KEY, {
+//           expiresIn: "20d",
+//         });
+//         //listUserOnline.push(user.username);
+//         return res.header("Authorization", token).send(token);
+//       } else {
+//         let password = email + process.env.SECRET_KEY;
+//         const newUser = new User({
+//           username: email,
+//           name: name,
+//           email: email,
+//           password: password,
+//         });
+//         try {
+//           const savedUser = await newUser.save();
+//           const token = jwt.sign(
+//             { id: savedUser._id, username: user.username },
+//             process.env.SECRET_KEY,
+//             {
+//               expiresIn: "20d",
+//             }
+//           );
+//           //listUserOnline.push(newUser.username);
+//           return res.header("Authorization", token).send(token);
+//         } catch (error) {
+//           return res.status(400).send(error);
+//         }
+//       }
+//     })
+//     .catch((error) => {
+//       res.status(400).send("Facebook Login Error! Try again");
+//     });
+// };
+
 exports.facebookLoginController = async (req, res) => {
-  const { user_id, access_token } = req.body;
-  const url = `https://graph.facebook.com/v2.11/${user_id}/?fields=id,name,email&access_token=${access_token}`;
-  return fetch(url, {
-    method: "GET",
-  })
-    .then((response) => response.json())
-    .then(async (response) => {
-      const { email, name } = response;
-      const user = await User.findOne({ email: email });
-      if (user) {
-        const token = jwt.sign({ id: user._id, username: user.username }, process.env.SECRET_KEY, {
-          expiresIn: "20d",
-        });
-        //listUserOnline.push(user.username);
-        return res.header("Authorization", token).send(token);
-      } else {
-        let password = email + process.env.SECRET_KEY;
-        const newUser = new User({
-          username: email,
-          name: name,
-          email: email,
-          password: password,
-        });
-        try {
-          const savedUser = await newUser.save();
-          const token = jwt.sign(
-            { id: savedUser._id, username: user.username },
-            process.env.SECRET_KEY,
-            {
-              expiresIn: "20d",
-            }
-          );
-          //listUserOnline.push(newUser.username);
-          return res.header("Authorization", token).send(token);
-        } catch (error) {
-          return res.status(400).send(error);
-        }
-      }
-    })
-    .catch((error) => {
-      res.status(400).send("Facebook Login Error! Try again");
-    });
+  console.log(req.user);
+  const user = req.user;
+  const token = jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+    },
+    process.env.SECRET_KEY
+  );
+  res.redirect(`${process.env.CLIENT_URL}/login/?token=${token}`)
 };

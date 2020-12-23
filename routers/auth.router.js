@@ -31,8 +31,14 @@ router.get('/auth/google/callback',
     session: false,
     failureRedirect: `${process.env.CLIENT_URL}/login`
   }), googleLoginController);
+router.get('/login/facebook', passport.authenticate('facebook', { scope: ['email'] }));
+router.get('/auth/facebook/callback',
+  passport.authenticate('facebook', {
+    session: false,
+    failureRedirect: `${process.env.CLIENT_URL}/login`
+  }), facebookLoginController);
 // router.post("/google_login", googleLoginController);
-router.post("/facebook_login", facebookLoginController);
+// router.post("/facebook_login", facebookLoginController);
 router.post(
   "/forgot_password",
   validatorForgotPassword,
