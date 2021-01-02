@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const { errorHandler } = require("../helpers/errorHandle");
 const sgMail = require("@sendgrid/mail");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT);
-const listUserOnline = require("../object/listUserOnline");
+const listUserOnline = require("../logicObject/listUserOnline");
 
 sgMail.setApiKey(process.env.API_KEY);
 
@@ -280,9 +280,13 @@ exports.googleLoginController = async (req, res) => {
       });
       try {
         const savedUser = await newUser.save();
-        const token = jwt.sign({ id: savedUser._id, username: user.username }, process.env.SECRET_KEY, {
-          expiresIn: "20d",
-        });
+        const token = jwt.sign(
+          { id: savedUser._id, username: user.username },
+          process.env.SECRET_KEY,
+          {
+            expiresIn: "20d",
+          }
+        );
         //listUserOnline.push(newUser.username);
         return res.header("Authorization", token).send(token);
       } catch (error) {
@@ -305,9 +309,13 @@ exports.facebookLoginController = async (req, res) => {
       const { email, name } = response;
       const user = await User.findOne({ email: email });
       if (user) {
-        const token = jwt.sign({ id: user._id, username: user.username }, process.env.SECRET_KEY, {
-          expiresIn: "20d",
-        });
+        const token = jwt.sign(
+          { id: user._id, username: user.username },
+          process.env.SECRET_KEY,
+          {
+            expiresIn: "20d",
+          }
+        );
         //listUserOnline.push(user.username);
         return res.header("Authorization", token).send(token);
       } else {
