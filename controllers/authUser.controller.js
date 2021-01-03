@@ -204,10 +204,17 @@ exports.loginController = (req, res, next) => {
       }
       const payload = {
         _id: user._id,
+        isAdmin: user.isAdmin,
+        name: user.name,
         username: user.username,
+        message: info.message,
+        email: user.email,
+        date: user.date
       };
       const token = jwt.sign(payload, process.env.SECRET_KEY);
+      console.log(token);
       res.send(token);
+
     })(req, res, next);
   };
 };
