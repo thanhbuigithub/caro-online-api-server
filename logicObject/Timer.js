@@ -1,15 +1,15 @@
 class Timer {
   constructor(game) {
-    this.currentTick = 0;
+    this.currentTick = game.room.turnTimeLimit;
     this.interval = null;
     this.game = game;
   }
 
   start() {
-    this.currentTick = 0;
+    this.currentTick = this.game.room.turnTimeLimit;
     this.interval = setInterval(() => {
-      this.currentTick++;
       this.game.doTick();
+      this.currentTick--;
     }, 1000);
   }
 
@@ -22,7 +22,7 @@ class Timer {
   }
 
   restart() {
-    this.currentTick = 0;
+    this.currentTick = this.game.room.turnTimeLimit;
   }
 }
 

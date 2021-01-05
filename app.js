@@ -52,6 +52,7 @@ socketConnection.init(server);
 const io = socketConnection.io();
 
 const Player = require("./logicObject/Player");
+
 io.on("connection", (socket) => {
   console.log("SocketIO: (connection)");
   const player = new Player(socket);

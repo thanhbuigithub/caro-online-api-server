@@ -13,6 +13,7 @@ class Game {
     this.chatHistory = [];
     this.room = room;
     this.startedTime = null;
+    this.startedTurnTime = null;
     this.winLine = null;
     this.init();
   }
@@ -66,7 +67,7 @@ class Game {
     this.board[x][y] = chess;
     this.addHistory(x, y, chess);
     this.preMove = { x, y, chess };
-    player.emitNewMove(this.preMove);
+    this.room.emitNewMove(this.preMove);
     const winLine = this.checkWin(x, y);
     if (winLine !== null) {
       this.onGameOver(winLine);
@@ -183,7 +184,8 @@ class Game {
 
   doTick() {
     let curTick = this.turnTimer.getCurrentTick();
-    if (curTick > config.TURN_TIME_LIMIT) {
+    console.log(curTick);
+    if (curTick <= 0) {
       this.onGameOver();
       return;
     }
@@ -193,7 +195,7 @@ class Game {
     console.log("Game: GAME OVER");
     this.turnTimer.stop();
     this.winLine = winLine;
-    this.playerX.emitGameOver(winLine);
+    this.room.emitGameOver(winLine);
     this.saveGame();
     this.room.onGameOver();
   }
@@ -201,10 +203,12 @@ class Game {
   start() {
     this.startedTime = Date.now();
     this.turnTimer.start();
+    this.startedTurnTime = Date.now();
   }
 
   changeTurn() {
     this.turnTimer.restart();
+    this.startedTurnTime = Date.now();
     this.turn =
       this.turn === config.PLAYER_X ? config.PLAYER_O : config.PLAYER_X;
   }
@@ -218,6 +222,8 @@ class Game {
       preMove: this.preMove,
       currentTick: this.turnTimer.getCurrentTick(),
       winLine: this.winLine,
+      startedTurnTime: this.startedTurnTime,
+      currentTime: Date.now(),
     };
   }
 }

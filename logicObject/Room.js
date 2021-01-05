@@ -1,5 +1,6 @@
 const config = require("./config");
 const Game = require("./Game");
+const io = require("../socketio/SocketConnection").io();
 
 class Room {
   constructor(id) {
@@ -10,6 +11,7 @@ class Room {
     this.playerXReady = false;
     this.playerOReady = false;
     this.game = null;
+    this.turnTimeLimit = config.TURN_TIME_LIMIT;
     this.state = config.GAME_STATE.UNREADY;
     this.chatHistory = [];
   }
@@ -21,12 +23,35 @@ class Room {
   playerSit(player) {
     if (this.playerX === null) {
       this.playerX = player;
-      return config.PLAYER_X;
+      return {
+        at: config.PLAYER_X,
+        player: player.toPacket(),
+      };
     }
 
     if (this.playerO === null) {
       this.playerO = player;
-      return config.PLAYER_O;
+      return {
+        at: config.PLAYER_O,
+        player: player.toPacket(),
+      };
+    }
+
+    return false;
+  }
+
+  playerStandUp(player) {
+    if (this.playerX === player) {
+      this.playerXReady = false;
+      this.playerX = null;
+      return player.toPacket();
+    }
+
+    if (this.playerO === player) {
+      this.playerOReady = false;
+      this.playerO = null;
+      this.checkGameReady();
+      return player.toPacket();
     }
 
     return false;
@@ -36,20 +61,33 @@ class Room {
     if (this.playerX === player) {
       this.playerXReady = true;
       this.checkGameReady();
-      return true;
+      return player.toPacket();
     }
 
     if (this.playerO === player) {
       this.playerOReady = true;
       this.checkGameReady();
-      return true;
+      return player.toPacket();
     }
 
     return false;
   }
 
+  playerChat(player, message) {
+    const chat = {
+      sender: player.toPacket(),
+      message: message,
+    };
+    this.chatHistory.push(chat);
+    if (this.isStarted()) {
+      this.game.chatHistory.push(chat);
+    }
+    return chat;
+  }
+
   startGame() {
     if (this.state === config.GAME_STATE.UNREADY) {
+      this.emitStartGame();
       this.state = config.GAME_STATE.STARTED;
       this.game = new Game(this);
       this.game.start();
@@ -60,6 +98,16 @@ class Room {
     this.state = config.GAME_STATE.UNREADY;
     this.playerXReady = false;
     this.playerOReady = false;
+    if (!this.playerX.socket.connected) {
+      this.remove(this.playerX.id);
+      io.to(this.id).emit("new-player-stand-up", this.playerX.toPacket());
+      this.playerX = null;
+    }
+    if (!this.playerO.socket.connected) {
+      this.remove(this.playerO.id);
+      io.to(this.id).emit("new-player-stand-up", this.playerO.toPacket());
+      this.playerO = null;
+    }
   }
 
   checkGameReady() {
@@ -88,8 +136,35 @@ class Room {
       playerOReady: this.playerOReady,
       game: this.game !== null ? this.game.toPacket() : null,
       state: this.state,
+      turnTimeLimit: this.turnTimeLimit,
       chatHistory: this.chatHistory,
     };
+  }
+
+  remove(playerId) {
+    const index = this.players.indexOf(this.find(playerId));
+    if (index > -1) {
+      const player = this.players.splice(index, 1);
+    }
+  }
+
+  find(playerId) {
+    return this.players.find((player) => player.id === playerId);
+  }
+
+  emitNewMove(move) {
+    //console.log(`Game: ${this.user.username} move ${move.x}:${move.y}`);
+    io.to(this.id).emit("new-move", move);
+  }
+
+  emitGameOver(winLine) {
+    console.log(`Game: winLine: ${winLine}`);
+    io.to(this.id).emit("game-over", winLine);
+  }
+
+  emitStartGame() {
+    console.log(`Game: start-game`);
+    io.to(this.id).emit("start-game");
   }
 }
 

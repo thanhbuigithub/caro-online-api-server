@@ -9,6 +9,7 @@ class Player {
     this.id = null;
     this.user = null;
     this.room = null;
+    this.disconnectTimeout = null;
   }
 
   socketHandler() {
@@ -17,27 +18,35 @@ class Player {
     this.createRoomHandler();
     this.joinRoomHandler();
     this.sitHandler();
+    this.standUpHandler();
     this.readyHandler();
     this.moveHandler();
+    this.chatHandler();
   }
 
   joinHandler() {
     this.socket.on("join", async (idUser) => {
       this.id = idUser;
-      this.user = await User.findOne({ _id: idUser });
-      playerManager.add(this);
+      if (playerManager.add(this)) {
+        this.user = await User.findOne({ _id: idUser });
+        console.log(`SocketIO: (join) ${this.id} ${playerManager.getAll()}`);
+      }
       io.emit("new-connect", playerManager.getAll());
-      console.log(`SocketIO: (join) ${this.id} ${playerManager.getAll()}`);
     });
   }
 
   disconnectHandler() {
-    this.socket.on("disconnect", () => {
-      playerManager.remove(this.id);
-      io.emit("new-connect", playerManager.getAll());
-      console.log(
-        `SocketIO: (disconnect) ${this.id} ${playerManager.getAll()}`
-      );
+    this.socket.on("disconnect", (reason) => {
+      clearTimeout(this.disconnectTimeout);
+      this.disconnectTimeout = null;
+      this.disconnectTimeout = setTimeout(() => {
+        playerManager.remove(this.id);
+        io.emit("new-connect", playerManager.getAll());
+        console.log(
+          `SocketIO: (disconnect) ${this.id} ${playerManager.getAll()}`
+        );
+      }, 5000);
+      console.log(reason);
     });
   }
 
@@ -81,21 +90,31 @@ class Player {
     this.socket.on("sit", () => {
       let sit = this.room.playerSit(this);
       if (sit) {
-        this.socket.emit("sit-successful", sit);
+        //this.socket.emit("sit-successful", sit);
         console.log(`Room: ${this.user.username} sit in ${this.room.id}`);
-        this.socket.to(this.room.id).emit("new-player-sit", this.user.username);
+        io.to(this.room.id).emit("new-player-sit", sit);
+      }
+    });
+  }
+
+  standUpHandler() {
+    this.socket.on("stand-up", () => {
+      let standUp = this.room.playerStandUp(this);
+      if (standUp) {
+        //this.socket.emit("sit-successful", sit);
+        console.log(`Room: ${this.user.username} stand up in ${this.room.id}`);
+        io.to(this.room.id).emit("new-player-stand-up", standUp);
       }
     });
   }
 
   readyHandler() {
     this.socket.on("ready", () => {
-      if (this.room.playerReady(this)) {
-        this.socket.emit("ready-successful");
+      let ready = this.room.playerReady(this);
+      if (ready) {
+        //this.socket.emit("ready-successful");
         console.log(`Room: ${this.user.username} ready in ${this.room.id}`);
-        this.socket
-          .to(this.room.id)
-          .emit("new-player-ready", this.user.username);
+        io.to(this.room.id).emit("new-player-ready", ready);
       }
     });
   }
@@ -109,14 +128,15 @@ class Player {
     });
   }
 
-  emitNewMove(move) {
-    console.log(`Game: ${this.user.username} move ${move.x}:${move.y}`);
-    io.to(this.room.id).emit("new-move", move);
-  }
-
-  emitGameOver(winLine) {
-    console.log(`Game: winLine: ${winLine}`);
-    io.to(this.room.id).emit("game-over", winLine);
+  chatHandler() {
+    this.socket.on("chat", (message) => {
+      let chat = this.room.playerChat(this, message);
+      if (chat) {
+        //this.socket.emit("ready-successful");
+        console.log(`Room: ${this.user.username} chat in ${this.room.id}`);
+        io.to(this.room.id).emit("new-chat", this.room.chatHistory);
+      }
+    });
   }
 
   getUser() {
