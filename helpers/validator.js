@@ -1,5 +1,6 @@
 const { check } = require('express-validator');
 
+
 exports.validatorSignUp = [
     check('name', 'Name không được rỗng !').notEmpty(),
     check('username', 'Username không được rỗng !').notEmpty(),
@@ -38,3 +39,4 @@ exports.validatorChangePassword = [
     check('newPassword').matches(/^(?=.*[A-Z])/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự hoa'),
     check('newPassword').matches(/^(?=.*[@$!%*#?&]).*$/).withMessage('Mật khẩu phải chứa ít nhất 1 kí tự đặc biệt')
 ];
+

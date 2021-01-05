@@ -4,7 +4,8 @@ const router = express.Router();
 const {
   readController,
   updateController,
-  changePasswordController
+  changePasswordController,
+  updateAvatarController
 } = require("../controllers/user.controller");
 
 const {
@@ -14,5 +15,5 @@ const {
 router.get("/profile", readController);
 router.put("/update", updateController);
 router.put("/change_password", validatorChangePassword, changePasswordController);
-
+router.put("/updateAvatar", updateAvatarController);
 module.exports = router;

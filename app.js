@@ -3,9 +3,12 @@ const app = express();
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const mongoose = require('mongoose');
 const connectDB = require("./configs/database");
+const multer = require('multer');
+const GridFsStorage = require('multer-gridfs-storage');
+const crypto = require('crypto');
 const path = require("path");
-
 // CONFIG .env
 require("dotenv").config();
 const passport = require('./middlewares/passport');
@@ -13,14 +16,18 @@ const passport = require('./middlewares/passport');
 // Import Routers
 const authRouter = require("./routers/auth.router");
 const userRouter = require("./routers/user.router");
+const imageRouter = require("./routers/image.router");
 // Connect to mongo DB
 connectDB();
+
+
 
 //Passport initialize
 app.use(passport.initialize());
 
 //Middleware
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(cors());
 
@@ -29,6 +36,32 @@ app.use(cors());
 //   app.use(morgan("dev"));
 // }
 
+
+const storage = new GridFsStorage({
+  url: process.env.MONGODB_URL,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      crypto.randomBytes(16, (err, buf) => {
+        if (err) {
+          return reject(err);
+        }
+        const filename = req.body.caption + path.extname(file.originalname);
+        const fileInfo = {
+          filename: filename,
+          bucketName: 'uploads'
+        };
+        resolve(fileInfo);
+      });
+    });
+  },
+  options: {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }
+});
+
+const upload = multer({ storage });
+app.use('/api/image', imageRouter(upload));
 
 app.get("/", (req, res) => {
   res.send("Repo for Caro Online Web App");
@@ -39,7 +72,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/user", authRouter);
 app.use('/api/user', passport.authenticate('jwt', { session: false }), userRouter);
-
 
 //Page not found
 app.use((req, res) => {

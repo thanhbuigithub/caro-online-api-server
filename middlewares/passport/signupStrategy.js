@@ -12,11 +12,12 @@ const SignupStrategy = new LocalStrategy({ passReqToCallback: true, session: fal
         return done(null, false, { message: "The Username already exists" })
     }
     else {
+        const { name, email, username, password } = req.body;
         const user = {
-            username,
-            email,
-            name,
-            password,
+            name: name,
+            email: email,
+            username: username,
+            password: password,
         };
         return done(null, user);
     }

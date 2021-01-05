@@ -23,26 +23,24 @@ exports.registerController = (req, res, next) => {
       session: false
     }, (err, user, info) => {
       if (err) {
-        return next(err)
+        return res.status(400).send(err);
       };
       if (!user) {
         return res.status(400).send(info.message)
       }
       else {
-        const payload = {
-          ...user
-        };
-        const token = jwt.sign(payload, process.env.JWT_USER_ACTIVE,
-          { expiresIn: "30m" });
+        const token = jwt.sign(user, process.env.JWT_USER_ACTIVE,
+          { expiresIn: 3600 });
 
         const emailMessage = {
           from: process.env.MAIL_FROM,
           to: user.email,
           subject: "Email kích hoạt tài khoản",
           html: `<h1>Nhấn vào link bên dưới để kích hoạt tài khoản !!!</h1>
-                  <p>${process.env.CLIENT_URL}/user/active/${token}</p>
+                  <p>${process.env.CLIENT_URL}/active/${token}</p>
                   <hr />`,
         };
+
         sgMail
           .send(emailMessage)
           .then((sent, error) => {
@@ -62,14 +60,17 @@ exports.registerController = (req, res, next) => {
   };
 };
 
-exports.activeUserController = (req, res, next) => {
-  const { token } = req.body;
+
+exports.activeUserController = (req, res) => {
+  let { token } = req.body;
+  token = token.token;
   if (token) {
     jwt.verify(token, process.env.JWT_USER_ACTIVE, (err, decoded) => {
       if (err) {
         return res.status(404).send("Token Expired ! Signup Again");
       } else {
         const { name, username, email, password } = jwt.decode(token);
+        console.log(name, username, email, password);
         const user = new User({
           email,
           username,
@@ -89,9 +90,7 @@ exports.activeUserController = (req, res, next) => {
       }
     });
   } else {
-    return res.json({
-      message: "Error something ! Register again",
-    });
+    return res.status(401).send('No token provided! Register again');
   }
 };
 
@@ -110,7 +109,7 @@ exports.forgotPasswordController = async (req, res) => {
         },
         process.env.JWT_RESET_PASSWORD,
         {
-          expiresIn: "10m",
+          expiresIn: "15m",
         }
       );
       const emailMessage = {
@@ -143,7 +142,8 @@ exports.forgotPasswordController = async (req, res) => {
 };
 
 exports.resetPasswordController = (req, res) => {
-  const { newPassWord, resetPassWordLink } = req.body;
+  let { newPassWord, resetPassWordLink } = req.body;
+  resetPassWordLink = resetPassWordLink.token;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const firstError = errors.array().map((error) => error.msg)[0];
@@ -284,8 +284,9 @@ exports.requireAdmin = async (req, res, next) => {
 //   }
 // };
 
-exports.googleLoginController = async (req, res) => {
+exports.googleLoginController = (req, res) => {
   const user = req.user;
+  console.log(req.user);
   const token = jwt.sign(
     {
       id: user._id,
@@ -343,7 +344,6 @@ exports.googleLoginController = async (req, res) => {
 // };
 
 exports.facebookLoginController = async (req, res) => {
-  console.log(req.user);
   const user = req.user;
   const token = jwt.sign(
     {

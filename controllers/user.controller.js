@@ -11,9 +11,10 @@ exports.readController = async (req, res) => {
         username,
         message,
         email,
-        date
+        date,
+        avatarUrl
     } = userFind;
-    const sender = { id: _id, name: name, email: email, username: username, message: message, date: date };
+    const sender = { id: _id, name: name, email: email, username: username, message: message, date: date, avatar: avatarUrl };
     return res.status(200).send(sender);
 };
 
@@ -74,3 +75,7 @@ exports.changePasswordController = async (req, res) => {
         return res.status(400).send(error);
     } s
 };
+
+exports.updateAvatarController = async (req, res) => {
+
+}

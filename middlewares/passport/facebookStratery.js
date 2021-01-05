@@ -6,7 +6,7 @@ module.exports = new FacebookStrategy({
     clientID: configAuth.facebookAuth.clientID,
     clientSecret: configAuth.facebookAuth.clientSecret,
     callbackURL: configAuth.facebookAuth.callbackURL,
-    profileFields: ['id', 'displayName', 'email', 'first_name', 'last_name', 'middle_name']
+    profileFields: ['id', 'displayName', 'email', 'first_name', 'photos', 'last_name', 'middle_name']
 }, async (token, refreshToken, profile, done) => {
     try {
         const user = await User.findOne({ email: profile.emails[0].value });
@@ -18,6 +18,7 @@ module.exports = new FacebookStrategy({
             name: profile.displayName,
             email: profile.emails[0].value,
             password: token,
+            avatarUrl: profile.photos[0].value
         });
         try {
             await newUser.save();

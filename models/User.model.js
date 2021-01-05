@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
         data: String,
         default: ''
     },
+    // avatarUrl: String,
     email: {
         type: String,
         required: true,
