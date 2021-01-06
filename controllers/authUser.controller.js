@@ -8,6 +8,7 @@ const { errorHandler } = require("../helpers/errorHandle");
 const sgMail = require("@sendgrid/mail");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const passport = require('passport');
+
 sgMail.setApiKey(process.env.API_KEY);
 
 
@@ -212,7 +213,6 @@ exports.loginController = (req, res, next) => {
         date: user.date
       };
       const token = jwt.sign(payload, process.env.SECRET_KEY);
-      console.log(token);
       res.send(token);
 
     })(req, res, next);

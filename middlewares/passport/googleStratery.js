@@ -17,7 +17,6 @@ module.exports = new GoogleStrategy({
             name: profile.displayName,
             email: profile.emails[0].value,
             password: token,
-            avatarUrl: profile.photos[0].value
         });
         try {
             await newUser.save();

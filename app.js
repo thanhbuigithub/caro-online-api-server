@@ -82,61 +82,61 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log("Server is running!");
+  console.log(`Server is running in port ${PORT}!`);
 });
 
-const io = require("socket.io")(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
-});
+const socketConnection = require("./socketio/SocketConnection");
+socketConnection.init(server);
 
-//Socket IO
-const listUserOnline = require("./object/listUserOnline");
-const listRooms = require("./object/listRooms");
+const io = socketConnection.io();
+
+const Player = require("./logicObject/Player");
 
 io.on("connection", (socket) => {
-  socket.on("join", (username) => {
-    socket.username = username;
-    listUserOnline.push(socket.id, username);
-    io.emit("new_connect", listUserOnline.getAll());
-  });
+  console.log("SocketIO: (connection)");
+  const player = new Player(socket);
+  player.socketHandler();
 
-  socket.on("disconnect", () => {
-    listUserOnline.remove(socket.id);
-    io.emit("new_connect", listUserOnline.getAll());
-  });
+  // socket.on("join", async (idUser) => {
+  //   socket.user = await User.findOne({ _id: idUser });
+  //   listUserOnline.push(socket.id, socket.user.id);
+  //   io.emit("new_connect", listUserOnline.getAll());
+  // });
 
-  socket.on("join-room", (roomId) => {
-    console.log(`Room: ${socket.username} Join Room ${roomId}`);
-    let room = listRooms.addUser(roomId, socket.id);
-    if (room) {
-      console.log(`Room: ${socket.username} has joined to room ${roomId} `);
-      socket.roomId = room.id;
-      socket.join(room.id);
-      socket.emit("join-room-successful", room.id);
-      socket.to(socket.roomId).emit("new-player-join-room", socket.username);
-    } else {
-      socket.emit("join-room-failed");
-    }
-  });
+  // socket.on("disconnect", () => {
+  //   listUserOnline.remove(socket.id);
+  //   io.emit("new_connect", listUserOnline.getAll());
+  // });
 
-  socket.on("create-room", () => {
-    console.log(`Room: ${socket.username} Create Room...`);
-    let room = listRooms.createRoom(socket.id);
-    if (room) {
-      socket.roomId = room.id;
-      socket.join(room.id);
-      socket.emit("create-room-successful", room.id);
-    } else {
-      socket.emit("create-room-failed");
-    }
-  });
+  // socket.on("join-room", (roomId) => {
+  //   console.log(`Room: ${socket.username} Join Room ${roomId}`);
+  //   let room = listRooms.addUser(roomId, socket.id);
+  //   if (room) {
+  //     console.log(`Room: ${socket.username} has joined to room ${roomId} `);
+  //     socket.roomId = room.id;
+  //     socket.join(room.id);
+  //     socket.emit("join-room-successful", room.id);
+  //     socket.to(socket.roomId).emit("new-player-join-room", socket.username);
+  //   } else {
+  //     socket.emit("join-room-failed");
+  //   }
+  // });
 
-  socket.on("move", (payload) => {
-    console.log(`Move: ${socket.username} move...`);
-    socket.to(socket.roomId).emit("move", payload);
-  });
+  // socket.on("create-room", () => {
+  //   console.log(`Room: ${socket.username} Create Room...`);
+  //   let room = listRooms.createRoom(socket.id);
+  //   if (room) {
+  //     socket.roomId = room.id;
+  //     socket.join(room.id);
+  //     socket.emit("create-room-successful", room.id);
+  //   } else {
+  //     socket.emit("create-room-failed");
+  //   }
+  // });
+
+  // socket.on("move", (payload) => {
+  //   console.log(`Move: ${socket.username} move...`);
+  //   socket.to(socket.roomId).emit("move", payload);
+  // });
 });
 

@@ -12,9 +12,8 @@ exports.readController = async (req, res) => {
         message,
         email,
         date,
-        avatarUrl
     } = userFind;
-    const sender = { id: _id, name: name, email: email, username: username, message: message, date: date, avatar: avatarUrl };
+    const sender = { _id: _id, name: name, email: email, username: username, message: message, date: date };
     return res.status(200).send(sender);
 };
 
