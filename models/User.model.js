@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema({
     isAdmin: {   // False :User ; True : Admin
         type: Boolean,
         default: false
+    },
+    isActive: { // False :Denied ; True : Access
+        type: Boolean,
+        default: true
     }
 }, { timeStamp: true });
 

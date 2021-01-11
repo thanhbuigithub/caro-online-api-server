@@ -219,22 +219,6 @@ exports.loginController = (req, res, next) => {
   };
 };
 
-exports.requireAdmin = async (req, res, next) => {
-  const user = await User.findById({ _id: req.user._id });
-  if (user) {
-    if (user.isAdmin === false) {
-      return res.status(400).json({
-        error: "Admin access denied.",
-      });
-    }
-    req.profile = user;
-    next();
-  } else {
-    return res.status(400).json({
-      error: "User not found !",
-    });
-  }
-};
 
 // exports.googleLoginController = async (req, res) => {
 //   const { id_token } = req.body;

@@ -57,6 +57,7 @@ module.exports = (upload) => {
             const imageFile = await Image.findOne({ caption: req.params.filename });
             res.status(200).json({
                 path: imageFile.filename,
+                pathId: imageFile.fileId,
                 success: true,
             });
         } catch (error) {
@@ -114,27 +115,51 @@ module.exports = (upload) => {
         });
 
     /* 
-        GET: Fetches a particular image and render on browser
+        GET: Fetches a particular image and render on browser by filename
     */
-    imageRouter.route('/avatar/:filename')
-        .get((req, res, next) => {
-            gfs.find({ filename: req.params.filename }).toArray((err, files) => {
-                if (!files[0] || files.length === 0) {
-                    return res.status(200).json({
-                        success: false,
-                        message: 'No files available',
-                    });
-                }
+    // imageRouter.route('/avatar/:filename')
+    //     .get((req, res, next) => {
+    //         gfs.find({ filename: req.params.filename }).toArray((err, files) => {
+    //             if (!files[0] || files.length === 0) {
+    //                 return res.status(200).json({
+    //                     success: false,
+    //                     message: 'No files available',
+    //                 });
+    //             }
 
-                if (files[0].contentType === 'image/jpg' || files[0].contentType === 'image/jpeg' || files[0].contentType === 'image/png' || files[0].contentType === 'image/svg+xml') {
-                    gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+    //             if (files[0].contentType === 'image/jpg' || files[0].contentType === 'image/jpeg' || files[0].contentType === 'image/png' || files[0].contentType === 'image/svg+xml') {
+    //                 gfs.openDownloadStreamByName(req.params.filename).pipe(res);
+    //             } else {
+    //                 res.status(404).json({
+    //                     err: 'Not an image',
+    //                 });
+    //             }
+    //         });
+    //     });
+
+    /* 
+       GET: Fetches a particular image and render on browser by id
+   */
+    imageRouter.route('/avatar/:id')
+        .get(async (req, res, next) => {
+            try {
+                const files = await gfs.find(new mongoose.Types.ObjectId(req.params.id)).toArray();
+                if (files[0].contentType === 'image/jpg' ||
+                    files[0].contentType === 'image/jpeg' ||
+                    files[0].contentType === 'image/png' ||
+                    files[0].contentType === 'image/svg+xml') {
+                    gfs.openDownloadStreamByName(files[0].filename).pipe(res);
                 } else {
                     res.status(404).json({
-                        err: 'Not an image',
+                        err: 'No image available',
                     });
                 }
-            });
+            } catch (error) {
+                res.status(404).json({ err: 'Not an image' })
+            }
+
         });
+
 
     /*
         DELETE: Delete a particular file by an ID
