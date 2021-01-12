@@ -17,17 +17,17 @@ const {
 } = require("../helpers/validator");
 
 router.post("/register", validatorSignUp, registerController);
-// router.post("/active", activeUserController);
+router.post("/active", activeUserController);
 router.post("/login", validatorSignIn, loginController);
-// router.post(
-//   "/forgot_password",
-//   validatorForgotPassword,
-//   forgotPasswordController
-// );
-// router.put(
-//   "/reset_password",
-//   validatorResetPassword,
-//   resetPasswordController
-// );
+router.post(
+  "/forgot_password",
+  validatorForgotPassword,
+  forgotPasswordController
+);
+router.put(
+  "/reset_password",
+  validatorResetPassword,
+  resetPasswordController
+);
 
 module.exports = router;

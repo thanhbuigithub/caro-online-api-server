@@ -78,3 +78,44 @@ exports.changePasswordController = async (req, res) => {
 exports.updateAvatarController = async (req, res) => {
 
 }
+
+
+exports.getAllUsersController = async (req, res) => {
+    try {
+        const listUsers = await User.find({ isAdmin: false });
+        const users = [];
+        listUsers.forEach(item => {
+            const user = {
+                _id: item._id,
+                isActive: item.isActive,
+                isAdmin: item.isAdmin,
+                username: item.username,
+                name: item.name,
+                email: item.email,
+                date: item.date,
+                isUploadAvatar: item.isUploadAvatar,
+            }
+            return users.push(user);
+        })
+        res.status(200).send(users);
+    } catch (error) {
+        res.status(400).send('Something is error !')
+    }
+};
+
+exports.disableUsersController = async (req, res) => {
+    try {
+        await User.findOneAndUpdate({ _id: req.body._id }, { isActive: false });
+    } catch (error) {
+        res.status(400).send('Can not disable user!')
+    }
+
+}
+
+exports.enableUsersController = async (req, res) => {
+    try {
+        await User.findOneAndUpdate({ _id: req.body._id }, { isActive: true });
+    } catch (error) {
+        res.status(400).send('Can not enable user!')
+    }
+}

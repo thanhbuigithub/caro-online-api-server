@@ -38,6 +38,10 @@ const userSchema = new mongoose.Schema({
     isActive: { // False :Denied ; True : Access
         type: Boolean,
         default: true
+    },
+    isUploadAvatar: {
+        type: Boolean,
+        default: false
     }
 }, { timeStamp: true });
 

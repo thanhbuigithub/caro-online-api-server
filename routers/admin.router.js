@@ -5,8 +5,11 @@ const {
   readController,
   updateController,
   changePasswordController,
-  updateAvatarController
-} = require("../controllers/user.controller");
+  updateAvatarController,
+  getAllUsersController,
+  disableUsersController,
+  enableUsersController
+} = require("../controllers/admin.controller");
 
 const {
   validatorChangePassword
@@ -16,4 +19,7 @@ router.get("/profile", readController);
 router.put("/update", updateController);
 router.put("/change_password", validatorChangePassword, changePasswordController);
 router.put("/updateAvatar", updateAvatarController);
+router.get("/users", getAllUsersController);
+router.put("/disable", disableUsersController);
+router.put("/enable", enableUsersController);
 module.exports = router;

@@ -2,7 +2,7 @@ const express = require('express');
 const imageRouter = express.Router();
 const mongoose = require('mongoose');
 const Image = require('../models/Image.model');
-
+const User = require('../models/User.model');
 
 module.exports = (upload) => {
     const url = process.env.MONGODB_URL;
@@ -38,6 +38,12 @@ module.exports = (upload) => {
             });
             console.log('New image', newImage);
             try {
+                await User.findOneAndUpdate({ _id: req.body.caption }, { isUploadAvatar: true });
+            } catch (err) {
+                return res.status(500).json(err);
+            }
+
+            try {
                 const image = await newImage.save();
                 res.status(200).json({
                     success: true,
@@ -46,6 +52,8 @@ module.exports = (upload) => {
             } catch (err) {
                 return res.status(500).json(err);
             }
+
+
         } catch (error) {
             return res.status(500).json(error);
         }
@@ -99,18 +107,24 @@ module.exports = (upload) => {
     */
     imageRouter.route('/file/:filename')
         .get((req, res, next) => {
-            gfs.find({ filename: req.params.filename }).toArray((err, files) => {
+            gfs.find({ filename: { $regex: req.params.filename } }).toArray((err, files) => {
                 if (!files[0] || files.length === 0) {
-                    return res.status(200).json({
+                    return res.status(404).json({
                         success: false,
                         message: 'No files available',
                     });
                 }
 
-                res.status(200).json({
-                    success: true,
-                    file: files[0],
-                });
+                if (files[0].contentType === 'image/jpg' ||
+                    files[0].contentType === 'image/jpeg' ||
+                    files[0].contentType === 'image/png' ||
+                    files[0].contentType === 'image/svg+xml') {
+                    gfs.openDownloadStreamByName(files[0].filename).pipe(res);
+                } else {
+                    res.status(404).json({
+                        err: 'No image available',
+                    });
+                }
             });
         });
 

@@ -270,7 +270,9 @@ exports.loginController = (req, res, next) => {
 
 exports.googleLoginController = (req, res) => {
   const user = req.user;
-  console.log(req.user);
+  if (!user.isActive) {
+    res.status(400).send('Permission is denied.');
+  }
   const token = jwt.sign(
     {
       id: user._id,
@@ -329,6 +331,9 @@ exports.googleLoginController = (req, res) => {
 
 exports.facebookLoginController = async (req, res) => {
   const user = req.user;
+  if (!user.isActive) {
+    res.status(400).send('Permission is denied.');
+  }
   const token = jwt.sign(
     {
       id: user._id,
