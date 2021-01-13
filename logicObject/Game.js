@@ -1,5 +1,7 @@
 const config = require("./config");
 const Timer = require("./Timer");
+const GameModel = require("../models/Game.model");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 class Game {
   constructor(room) {
@@ -15,6 +17,7 @@ class Game {
     this.startedTime = null;
     this.startedTurnTime = null;
     this.winLine = null;
+    this.winner = null;
     this.init();
   }
 
@@ -194,10 +197,24 @@ class Game {
   onGameOver(winLine) {
     console.log("Game: GAME OVER");
     this.turnTimer.stop();
-    this.winLine = winLine;
-    this.room.emitGameOver(winLine);
-    this.saveGame();
-    this.room.onGameOver();
+    if (winLine) {
+      this.winLine = winLine;
+      this.winner = this.winLine[0].chess;
+    } else {
+      this.winner =
+        this.turn === config.PLAYER_X ? config.PLAYER_O : config.PLAYER_X;
+    }
+
+    this.saveModel();
+    this.updateResult().then(() => {
+      this.room.emitGameOver(
+        this.winner,
+        winLine,
+        this.playerX.toPacket(),
+        this.playerO.toPacket()
+      );
+      this.room.onGameOver();
+    });
   }
 
   start() {
@@ -213,7 +230,69 @@ class Game {
       this.turn === config.PLAYER_X ? config.PLAYER_O : config.PLAYER_X;
   }
 
-  saveGame() {}
+  saveModel() {
+    const saveGame = GameModel({
+      playerX: this.playerX.user._id,
+      playerO: this.playerO.user._id,
+      history: this.history,
+      chatHistory: this.chatHistory.map((chat) => {
+        return { sender: ObjectId(chat.sender.id), message: chat.message };
+      }),
+      winLine: this.winLine,
+      winner: this.winner,
+    });
+
+    try {
+      saveGame.save();
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  draw() {
+    console.log("Game: GAME OVER BY DRAW");
+    this.turnTimer.stop();
+    this.saveModel();
+    this.updateResult().then(() => {
+      this.room.emitGameOver(
+        null,
+        null,
+        this.playerX.toPacket(),
+        this.playerO.toPacket()
+      );
+      this.room.onGameOver();
+    });
+  }
+
+  async updateResult() {
+    await Promise.all([this.playerX.updateMatch(), this.playerO.updateMatch()]);
+
+    if (this.winner === config.PLAYER_X) {
+      let point =
+        config.DEFAULT_POINT +
+        Math.round((this.playerO.user.elo - this.playerX.user.elo) / 1000);
+      point = Math.min(config.MAX_POINT, point);
+      await Promise.all([
+        this.playerX.updateElo(point, true),
+        this.playerO.updateElo(-point, false),
+      ]);
+
+      return;
+    }
+
+    if (this.winner === config.PLAYER_O) {
+      let point =
+        config.DEFAULT_POINT +
+        Math.round((this.playerX.user.elo - this.playerO.user.elo) / 1000);
+      point = Math.min(config.MAX_POINT, point);
+      await Promise.all([
+        this.playerX.updateElo(-point, false),
+        this.playerO.updateElo(point, true),
+      ]);
+
+      return;
+    }
+  }
 
   toPacket() {
     return {
