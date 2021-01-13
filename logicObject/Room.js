@@ -1,7 +1,7 @@
 const config = require("./config");
 const Game = require("./Game");
 const io = require("../socketio/SocketConnection").io();
-const playerManager = require("./playerManager");
+const playerManager = require("./PlayerManager");
 
 class Room {
   constructor(id) {
