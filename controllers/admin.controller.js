@@ -82,22 +82,18 @@ exports.updateAvatarController = async (req, res) => {
 
 exports.getAllUsersController = async (req, res) => {
     try {
-        const listUsers = await User.find({ isAdmin: false });
-        const users = [];
-        listUsers.forEach(item => {
-            const user = {
-                _id: item._id,
-                isActive: item.isActive,
-                isAdmin: item.isAdmin,
-                username: item.username,
-                name: item.name,
-                email: item.email,
-                date: item.date,
-                isUploadAvatar: item.isUploadAvatar,
-            }
-            return users.push(user);
-        })
-        res.status(200).send(users);
+        const listUsers = await User.find({ isAdmin: false }, {
+            _id: 1,
+            username: 1,
+            isActive: 1,
+            isAdmin: 1,
+            username: 1,
+            name: 1,
+            email: 1,
+            date: 1,
+            isUploadAvatar: 1,
+        });
+        res.status(200).send(listUsers);
     } catch (error) {
         res.status(400).send('Something is error !')
     }
@@ -105,16 +101,43 @@ exports.getAllUsersController = async (req, res) => {
 
 exports.disableUsersController = async (req, res) => {
     try {
-        await User.findOneAndUpdate({ _id: req.body._id }, { isActive: false });
+        const updateUser = await User.findOneAndUpdate({ _id: req.body._id }, { isActive: false }, {
+            new: true
+        });
+        const modifyUser = {
+            _id: updateUser._id,
+            username: updateUser.username,
+            isActive: updateUser.isActive,
+            isAdmin: updateUser.isAdmin,
+            name: updateUser.name,
+            email: updateUser.email,
+            date: updateUser.date,
+            isUploadAvatar: updateUser.isUploadAvatar,
+
+        }
+        res.status(200).send(modifyUser);
     } catch (error) {
         res.status(400).send('Can not disable user!')
     }
-
 }
 
 exports.enableUsersController = async (req, res) => {
     try {
-        await User.findOneAndUpdate({ _id: req.body._id }, { isActive: true });
+        const updateUser = await User.findOneAndUpdate({ _id: req.body._id }, { isActive: true }, {
+            new: true
+        });
+        const modifyUser = {
+            _id: updateUser._id,
+            username: updateUser.username,
+            isActive: updateUser.isActive,
+            isAdmin: updateUser.isAdmin,
+            name: updateUser.name,
+            email: updateUser.email,
+            date: updateUser.date,
+            isUploadAvatar: updateUser.isUploadAvatar,
+
+        }
+        res.status(200).send(modifyUser);
     } catch (error) {
         res.status(400).send('Can not enable user!')
     }

@@ -14,6 +14,8 @@ exports.readController = async (req, res) => {
     numOfMatches,
     winMatches,
     date,
+    isAdmin,
+    isUploadAvatar
   } = userFind;
   const sender = {
     _id: _id,
@@ -25,6 +27,8 @@ exports.readController = async (req, res) => {
     elo: elo,
     numOfMatches: numOfMatches,
     winMatches: winMatches,
+    isAdmin: isAdmin,
+    isUploadAvatar: isUploadAvatar
   };
   return res.status(200).send(sender);
 };
@@ -86,4 +90,4 @@ exports.changePasswordController = async (req, res) => {
   s;
 };
 
-exports.updateAvatarController = async (req, res) => {};
+exports.updateAvatarController = async (req, res) => { };
