@@ -3,10 +3,11 @@
   "builds": [
     {
       "src": "./app.js",
-      "use": "@now/node-server"
+      "use": "@now/node-server@0.4.26"
     }
   ],
   "routes": [
+    { "handle": "filesystem" },
     {
       "src": "/.*",
       "dest": "app.js"
