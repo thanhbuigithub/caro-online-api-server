@@ -1,6 +1,7 @@
 const config = require("./config");
 const Game = require("./Game");
 const io = require("../socketio/SocketConnection").io();
+const playerManager = require("./playerManager");
 
 class Room {
   constructor(id) {
@@ -14,10 +15,15 @@ class Room {
     this.turnTimeLimit = config.TURN_TIME_LIMIT;
     this.state = config.GAME_STATE.UNREADY;
     this.chatHistory = [];
+    this.password = null;
   }
 
   playerJoin(player) {
     if (!this.players.includes(player)) this.players.push(player);
+    if (this.removeTimeout) {
+      clearTimeout(this.removeTimeout);
+    }
+    playerManager.removeFromQuickMatch(player.id);
   }
 
   playerSit(player) {
@@ -85,12 +91,42 @@ class Room {
     return chat;
   }
 
+  playerInvited(player) {
+    this.playerJoin(player);
+    this.playerSit(player);
+  }
+
+  playerLeave(player) {
+    if (this.find(player.id)) {
+      this.remove(player.id);
+      if (this.state !== config.GAME_STATE.STARTED) this.playerStandUp(player);
+      this.checkRoomEmpty();
+      return {
+        isStandUp: this.state !== config.GAME_STATE.STARTED,
+      };
+    }
+    return false;
+  }
+
+  checkRoomEmpty() {
+    if (this.players.length === 0) {
+      this.removeTimeout = setTimeout(() => {
+        console.log(`Room: ${this.id} be removed`);
+        const roomManager = require("./RoomManager");
+        roomManager.remove(this.id);
+        this.emitNewRoom();
+      }, 30 * 1000);
+    }
+  }
+
   startGame() {
     if (this.state === config.GAME_STATE.UNREADY) {
       this.emitStartGame();
       this.state = config.GAME_STATE.STARTED;
       this.game = new Game(this);
       this.game.start();
+
+      this.emitNewRoom();
     }
   }
 
@@ -98,16 +134,20 @@ class Room {
     this.state = config.GAME_STATE.UNREADY;
     this.playerXReady = false;
     this.playerOReady = false;
-    if (!this.playerX.socket.connected) {
+
+    //Kiem tra mat ket noi
+    if (!this.playerX.socket.connected || !this.find(this.playerX.id)) {
       this.remove(this.playerX.id);
       io.to(this.id).emit("new-player-stand-up", this.playerX.toPacket());
       this.playerX = null;
     }
-    if (!this.playerO.socket.connected) {
+    if (!this.playerO.socket.connected || !this.find(this.playerO.id)) {
       this.remove(this.playerO.id);
       io.to(this.id).emit("new-player-stand-up", this.playerO.toPacket());
       this.playerO = null;
     }
+
+    this.emitNewRoom();
   }
 
   checkGameReady() {
@@ -120,6 +160,18 @@ class Room {
       this.startGame();
       console.log("SocketIO: GAME IS STARTED!");
     }
+  }
+
+  playerSurrender(player) {
+    if (this.isStarted()) {
+      const chess = this.game.chess(player);
+      if (chess !== null) {
+        this.game.turn = chess.turn;
+        this.game.onGameOver();
+        return true;
+      }
+    }
+    return false;
   }
 
   isStarted() {
@@ -157,14 +209,34 @@ class Room {
     io.to(this.id).emit("new-move", move);
   }
 
-  emitGameOver(winLine) {
-    console.log(`Game: winLine: ${winLine}`);
-    io.to(this.id).emit("game-over", winLine);
+  emitGameOver(winner, winLine, playerX, playerO) {
+    console.log(`Game: ${winner} ${playerX.elo} ${playerO.elo}`);
+    io.to(this.id).emit("game-over", {
+      winner: winner,
+      winLine: winLine,
+      playerX: playerX,
+      playerO: playerO,
+    });
   }
 
   emitStartGame() {
     console.log(`Game: start-game`);
     io.to(this.id).emit("start-game");
+  }
+
+  emitNewRoom() {
+    const roomManager = require("./RoomManager");
+    io.emit("new-room", roomManager.getAll());
+  }
+
+  toSimplePacket() {
+    return {
+      id: this.id,
+      playerX: this.playerX !== null ? this.playerX.toPacket() : null,
+      playerO: this.playerO !== null ? this.playerO.toPacket() : null,
+      state: this.state,
+      hasPassword: this.password !== null,
+    };
   }
 }
 

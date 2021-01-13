@@ -2,6 +2,7 @@ class PlayerManager {
   constructor() {
     if (!PlayerManager.instance) {
       this.players = [];
+      this.quickMatch = [];
       this.pollDisconnectedPlayers = [];
       this.cleanPollInterval = setInterval(() => {
         this.pollDisconnectedPlayers = [];
@@ -61,7 +62,40 @@ class PlayerManager {
   }
 
   getAll() {
-    return this.players.map((player) => player.getUser().username);
+    return this.players.map((player) => player.toPacket());
+  }
+
+  addToQuickMatch(player) {
+    const found = this.players.find((p) => p.id === player.id);
+    if (found) {
+      if (!this.quickMatch.find((p) => p.id === found.id)) {
+        this.quickMatch.push(found);
+      }
+    }
+  }
+
+  matchingPlayers(player) {
+    for (let i = 0; i < this.quickMatch.length; i++) {
+      const p = this.quickMatch[i];
+      if (
+        p.id !== player.id &&
+        p.user.elo <= player.user.elo + 500 &&
+        p.user.elo >= player.user.elo - 500 &&
+        p.room === null
+      )
+        return p;
+    }
+    return undefined;
+  }
+
+  removeFromQuickMatch(playerId) {
+    const found = this.quickMatch.find((p) => p.id === playerId);
+    if (found) {
+      const index = this.quickMatch.indexOf(found);
+      if (index > -1) {
+        this.quickMatch.splice(index, 1)[0];
+      }
+    }
   }
 }
 

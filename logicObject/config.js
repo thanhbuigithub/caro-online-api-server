@@ -9,4 +9,6 @@ module.exports = {
     UNREADY: 0,
     STARTED: 1,
   },
+  DEFAULT_POINT: 10,
+  MAX_POINT: 20,
 };

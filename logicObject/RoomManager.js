@@ -17,8 +17,11 @@ class RoomManager {
     return room;
   }
 
-  removeRoom(roomId) {
-    this.rooms = this.rooms.filter((room) => room.id === roomId);
+  remove(roomId) {
+    const index = this.rooms.indexOf(this.find(roomId));
+    if (index > -1) {
+      this.rooms.splice(index, 1)[0];
+    }
   }
 
   find(roomId) {
@@ -27,6 +30,10 @@ class RoomManager {
 
   idGenerator() {
     return Math.random().toString(36).substr(2, 9);
+  }
+
+  getAll() {
+    return this.rooms.map((room) => room.toSimplePacket());
   }
 }
 
