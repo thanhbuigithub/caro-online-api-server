@@ -275,8 +275,12 @@ exports.googleLoginController = (req, res) => {
   }
   const token = jwt.sign(
     {
-      id: user._id,
+      _id: user._id,
       username: user.username,
+      isAdmin: user.isAdmin,
+      name: user.name,
+      email: user.email,
+      date: user.date,
     },
     process.env.SECRET_KEY
   );
@@ -336,8 +340,12 @@ exports.facebookLoginController = async (req, res) => {
   }
   const token = jwt.sign(
     {
-      id: user._id,
+      _id: user._id,
       username: user.username,
+      isAdmin: user.isAdmin,
+      name: user.name,
+      email: user.email,
+      date: user.date,
     },
     process.env.SECRET_KEY
   );
