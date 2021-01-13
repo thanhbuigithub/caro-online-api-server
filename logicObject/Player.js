@@ -51,6 +51,7 @@ class Player {
             id: player._id,
             username: player.username,
             elo: player.elo,
+            isUploadAvatar: player.isUploadAvatar,
           };
         })
       );
@@ -316,6 +317,7 @@ class Player {
       elo: this.user.elo,
       numOfMatches: this.user.numOfMatches,
       winMatches: this.user.winMatches,
+      isUploadAvatar: this.user.isUploadAvatar,
     };
   }
 
