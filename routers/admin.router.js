@@ -19,7 +19,7 @@ router.get("/profile", readController);
 router.put("/update", updateController);
 router.put("/change_password", validatorChangePassword, changePasswordController);
 router.put("/updateAvatar", updateAvatarController);
-router.get("/users", getAllUsersController);
+router.post("/users", getAllUsersController);
 router.put("/disable", disableUsersController);
 router.put("/enable", enableUsersController);
 module.exports = router;
