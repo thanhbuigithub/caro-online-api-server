@@ -2,8 +2,14 @@ const mongoose = require("mongoose");
 
 const gameSchema = new mongoose.Schema(
   {
-    playerX: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    playerO: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    playerX: {
+      id: { type: String, required: true },
+      username: { type: String, required: true },
+    },
+    playerO: {
+      id: { type: String, required: true },
+      username: { type: String, required: true },
+    },
     history: [
       {
         x: { type: Number, required: true },
@@ -13,7 +19,10 @@ const gameSchema = new mongoose.Schema(
     ],
     chatHistory: [
       {
-        sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        sender: {
+          id: { type: String, required: true },
+          username: { type: String, required: true },
+        },
         message: { type: String, required: true },
       },
     ],

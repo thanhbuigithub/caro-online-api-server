@@ -232,11 +232,11 @@ class Game {
 
   saveModel() {
     const saveGame = GameModel({
-      playerX: this.playerX.user._id,
-      playerO: this.playerO.user._id,
+      playerX: this.playerX.id,
+      playerO: this.playerO.id,
       history: this.history,
       chatHistory: this.chatHistory.map((chat) => {
-        return { sender: ObjectId(chat.sender.id), message: chat.message };
+        return { sender: chat.sender.id, message: chat.message };
       }),
       winLine: this.winLine,
       winner: this.winner,
