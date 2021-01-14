@@ -1,0 +1,15 @@
+version: "3.7"
+
+services:
+  caro_online_server:
+    container_name: caro_online_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ".:/app"
+      - "/app/node_modules"
+    ports:
+      - 5000:5000
+    environment:
+      - CHOKIDAR_USEPOLLING=true
