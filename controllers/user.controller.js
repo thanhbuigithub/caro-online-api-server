@@ -1,4 +1,5 @@
 const User = require("../models/User.model");
+const Game = require("../models/Game.model");
 const { validationResult } = require("express-validator");
 
 exports.readController = async (req, res) => {
@@ -88,6 +89,27 @@ exports.changePasswordController = async (req, res) => {
     return res.status(400).send(error);
   }
   s;
+};
+
+exports.getAllGamesController = async (req, res) => {
+  try {
+    const games = await Game.find().sort({ _id: -1 }).populate("");
+    res.status(200).send(games);
+  } catch (error) {
+    res.status(400).send("Something is error !");
+  }
+};
+
+exports.getAllGamesOfUserController = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const games = await Game.find({
+      $or: [{ "playerX.id": userId }, { "playerO.id": userId }],
+    }).sort({ _id: -1 });
+    res.status(200).send(games);
+  } catch (error) {
+    res.status(400).send("Something is error !");
+  }
 };
 
 exports.updateAvatarController = async (req, res) => { };
