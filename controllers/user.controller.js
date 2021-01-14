@@ -1,4 +1,5 @@
 const User = require("../models/User.model");
+const Game = require("../models/Game.model");
 const { validationResult } = require("express-validator");
 
 exports.readController = async (req, res) => {
@@ -15,7 +16,7 @@ exports.readController = async (req, res) => {
     winMatches,
     date,
     isAdmin,
-    isUploadAvatar
+    isUploadAvatar,
   } = userFind;
   const sender = {
     _id: _id,
@@ -28,7 +29,7 @@ exports.readController = async (req, res) => {
     numOfMatches: numOfMatches,
     winMatches: winMatches,
     isAdmin: isAdmin,
-    isUploadAvatar: isUploadAvatar
+    isUploadAvatar: isUploadAvatar,
   };
   return res.status(200).send(sender);
 };
@@ -90,4 +91,16 @@ exports.changePasswordController = async (req, res) => {
   s;
 };
 
-exports.updateAvatarController = async (req, res) => { };
+exports.updateAvatarController = async (req, res) => {};
+
+exports.getAllGamesController = async (req, res) => {
+  try {
+    const id = req.user._id;
+    const games = await Game.find({
+      $or: [{ "playerX.id": id }, { "playerO.id": id }],
+    }).sort({ _id: -1 });
+    res.status(200).send(games);
+  } catch (error) {
+    res.status(400).send("Something is error !");
+  }
+};

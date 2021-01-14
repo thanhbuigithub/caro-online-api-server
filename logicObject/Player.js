@@ -30,6 +30,7 @@ class Player {
     this.surrenderHandler();
     this.toDrawHandler();
     this.acceptDrawHandler();
+    this.getDetailInfoHandler();
   }
 
   joinHandler() {
@@ -301,6 +302,23 @@ class Player {
         if (this === this.room.playerX || this === this.room.playerO) {
           this.room.game.draw();
         }
+      }
+    });
+  }
+
+  getDetailInfoHandler() {
+    this.socket.on("detail-player", async (id) => {
+      const detailPlayer = await User.findById(id);
+      const player = {
+        id: detailPlayer._id,
+        name: detailPlayer.name,
+        username: detailPlayer.username,
+        elo: detailPlayer.elo,
+        numOfMatches: detailPlayer.numOfMatches,
+        winMatches: detailPlayer.winMatches,
+      };
+      if (detailPlayer) {
+        this.socket.emit("open-detail-dialog", player);
       }
     });
   }

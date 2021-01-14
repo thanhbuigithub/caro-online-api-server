@@ -5,15 +5,19 @@ const {
   readController,
   updateController,
   changePasswordController,
-  updateAvatarController
+  updateAvatarController,
+  getAllGamesController,
 } = require("../controllers/user.controller");
 
-const {
-  validatorChangePassword
-} = require("../helpers/validator");
+const { validatorChangePassword } = require("../helpers/validator");
 
 router.get("/profile", readController);
 router.put("/update", updateController);
-router.put("/change_password", validatorChangePassword, changePasswordController);
+router.put(
+  "/change_password",
+  validatorChangePassword,
+  changePasswordController
+);
 router.put("/updateAvatar", updateAvatarController);
+router.get("/games", getAllGamesController);
 module.exports = router;
