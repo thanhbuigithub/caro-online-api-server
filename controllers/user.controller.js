@@ -16,7 +16,7 @@ exports.readController = async (req, res) => {
     winMatches,
     date,
     isAdmin,
-    isUploadAvatar
+    isUploadAvatar,
   } = userFind;
   const sender = {
     _id: _id,
@@ -29,7 +29,7 @@ exports.readController = async (req, res) => {
     numOfMatches: numOfMatches,
     winMatches: winMatches,
     isAdmin: isAdmin,
-    isUploadAvatar: isUploadAvatar
+    isUploadAvatar: isUploadAvatar,
   };
   return res.status(200).send(sender);
 };
@@ -91,9 +91,14 @@ exports.changePasswordController = async (req, res) => {
   s;
 };
 
+exports.updateAvatarController = async (req, res) => { };
+
 exports.getAllGamesController = async (req, res) => {
   try {
-    const games = await Game.find().sort({ _id: -1 }).populate("");
+    const id = req.user._id;
+    const games = await Game.find({
+      $or: [{ "playerX.id": id }, { "playerO.id": id }],
+    }).sort({ _id: -1 });
     res.status(200).send(games);
   } catch (error) {
     res.status(400).send("Something is error !");
@@ -102,14 +107,12 @@ exports.getAllGamesController = async (req, res) => {
 
 exports.getAllGamesOfUserController = async (req, res) => {
   try {
-    const { userId } = req.body;
+    const id = req.body.userId;
     const games = await Game.find({
-      $or: [{ "playerX.id": userId }, { "playerO.id": userId }],
+      $or: [{ "playerX.id": id }, { "playerO.id": id }],
     }).sort({ _id: -1 });
     res.status(200).send(games);
   } catch (error) {
     res.status(400).send("Something is error !");
   }
 };
-
-exports.updateAvatarController = async (req, res) => { };
