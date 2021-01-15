@@ -3,6 +3,7 @@ const playerManager = require("./PlayerManager");
 const roomManager = require("./RoomManager");
 const io = require("../socketio/SocketConnection").io();
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 class Player {
   constructor(socket) {
@@ -34,28 +35,35 @@ class Player {
   }
 
   joinHandler() {
-    this.socket.on("join", async (idUser) => {
-      this.id = idUser;
-      if (playerManager.add(this)) {
-        this.user = await User.findOne({ _id: idUser });
-        console.log(`SocketIO: (join) ${this.id} ${playerManager.getAll()}`);
+    this.socket.on("join", async (token) => {
+      try {
+        const verifier = jwt.verify(token, process.env.SECRET_KEY);
+        this.id = verifier._id;
+
+        if (playerManager.add(this)) {
+          this.user = await User.findOne({ _id: verifier._id });
+          console.log(`SocketIO: (join) ${this.id} ${playerManager.getAll()}`);
+        }
+
+        const rankList = await User.find().sort({ elo: -1 }).limit(100);
+
+        io.emit("new-connect", playerManager.getAll());
+        this.socket.emit("new-room", roomManager.getAll());
+        this.socket.emit(
+          "new-rank-list",
+          rankList.map((player) => {
+            return {
+              id: player._id,
+              username: player.username,
+              elo: player.elo,
+              isUploadAvatar: player.isUploadAvatar,
+            };
+          })
+        );
+      } catch (error) {
+        this.socket.emit("connect-failed");
+        this.socket.disconnect();
       }
-
-      const rankList = await User.find().sort({ elo: -1 }).limit(100);
-
-      io.emit("new-connect", playerManager.getAll());
-      this.socket.emit("new-room", roomManager.getAll());
-      this.socket.emit(
-        "new-rank-list",
-        rankList.map((player) => {
-          return {
-            id: player._id,
-            username: player.username,
-            elo: player.elo,
-            isUploadAvatar: player.isUploadAvatar,
-          };
-        })
-      );
     });
   }
 
